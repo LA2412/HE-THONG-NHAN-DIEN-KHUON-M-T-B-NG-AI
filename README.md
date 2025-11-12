@@ -30,7 +30,7 @@
 
 ---
 
-## � **1. Giới thiệu hệ thống**  
+##  **1. Giới thiệu hệ thống**  
 
 **Hệ thống Nhận diện Khuôn mặt AI cho Bán lẻ Thông minh** là một giải pháp toàn diện được xây dựng bằng **Flask (Python)** kết hợp **Deep Learning** và **Computer Vision**, cung cấp đầy đủ các chức năng nhận diện khách hàng, quản lý bán hàng, CRM và báo cáo phân tích.
 
