@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <nav>
+      <a href="{{ url_for('admin_dashboard') }}">Tổng quan</a>
+      <a href="{{ url_for('admin_users') }}">Quản lý tài khoản</a>
+      <a href="{{ url_for('admin_products') }}">Quản lý sản phẩm</a>
+      <a href="{{ url_for('admin_faces') }}" class="active">Quản lý dữ liệu nhận diện</a>
+      <a href="{{ url_for('admin_reports') }}">Báo cáo & nhật ký</a>
+    </nav>
+  </aside>
+  <section class="content">
+    <h1>Quản lý dữ liệu nhận diện</h1>
+
+    <section class="card">
+      <h2>Danh sách khuôn mặt</h2>
+      {% if faces %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Face ID</th>
+            <th>Tên</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for face in faces %}
+          <tr>
+            <td>{{ face.face_id }}</td>
+            <td>{{ face.name }}</td>
+            <td>
+              <form method="post" class="inline-form">
+                <input type="hidden" name="action" value="rename" />
+                <input type="hidden" name="face_id" value="{{ face.face_id }}" />
+                <input name="new_name" placeholder="Tên mới" required />
+                <button type="submit" class="btn btn-secondary btn-small">Đổi tên</button>
+              </form>
+              <form method="post" class="inline-form" onsubmit="return confirm('Gộp hồ sơ này vào Face ID khác?');">
+                <input type="hidden" name="action" value="merge" />
+                <input type="hidden" name="primary_face_id" value="{{ face.face_id }}" />
+                <select name="duplicate_face_id">
+                  {% for other in faces %}
+                  {% if other.face_id != face.face_id %}
+                  <option value="{{ other.face_id }}">{{ other.face_id }} - {{ other.name }}</option>
+                  {% endif %}
+                  {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-secondary btn-small">Gộp</button>
+              </form>
+              <form method="post" class="inline-form" onsubmit="return confirm('Xóa hoàn toàn dữ liệu khuôn mặt này?');">
+                <input type="hidden" name="action" value="delete" />
+                <input type="hidden" name="face_id" value="{{ face.face_id }}" />
+                <button type="submit" class="btn btn-danger btn-small">Xóa</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>Chưa có dữ liệu khuôn mặt.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2>Huấn luyện lại từ thư mục ảnh</h2>
+      <form method="post">
+        <input type="hidden" name="action" value="rebuild" />
+        <div class="form-grid">
+          <input name="folder" placeholder="Đường dẫn thư mục gốc" value="./images" />
+          <label class="checkbox">
+            <input type="checkbox" name="reinit" value="1" checked />
+            Khởi tạo lại hoàn toàn
+          </label>
+        </div>
+        <button type="submit" class="btn btn-primary">Bắt đầu</button>
+      </form>
+    </section>
+  </section>
+</div>
+{% endblock %}

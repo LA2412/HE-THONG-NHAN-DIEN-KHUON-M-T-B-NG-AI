@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <nav>
+      <a href="{{ url_for('admin_dashboard') }}">Tổng quan</a>
+      <a href="{{ url_for('admin_users') }}">Quản lý tài khoản</a>
+      <a href="{{ url_for('admin_products') }}">Quản lý sản phẩm</a>
+      <a href="{{ url_for('admin_faces') }}">Quản lý dữ liệu nhận diện</a>
+      <a href="{{ url_for('admin_reports') }}" class="active">Báo cáo & nhật ký</a>
+    </nav>
+  </aside>
+  <section class="content">
+    <h1>Báo cáo & nhật ký</h1>
+
+    <section class="card">
+      <h2>Đơn hàng gần đây</h2>
+      {% if orders %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Mã đơn</th>
+            <th>Khách hàng</th>
+            <th>Nhân viên</th>
+            <th>Giá trị</th>
+            <th>Ngày tạo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td>{{ order.order_number }}</td>
+            <td>{{ order.customer_name or "—" }}</td>
+            <td>{{ order.staff_name or "—" }}</td>
+            <td>{{ "{:,.0f}".format(order.total_amount or 0) }} đ</td>
+            <td>{{ order.created_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>Chưa có đơn hàng.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2>Nhật ký đăng nhập</h2>
+      {% if login_logs %}
+      <table class="table small">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Tài khoản</th>
+            <th>Trạng thái</th>
+            <th>Thiết bị</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in login_logs %}
+          <tr>
+            <td>{{ log.timestamp }}</td>
+            <td>{{ log.user_id or "Không xác định" }}</td>
+            <td>{% if log.successful %}<span class="badge badge-success">Thành công</span>{% else %}<span class="badge badge-danger">Thất bại</span>{% endif %}</td>
+            <td>{{ log.client_info or "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>Chưa có bản ghi.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2>Hoạt động hệ thống</h2>
+      {% if activity_logs %}
+      <table class="table small">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Người thao tác</th>
+            <th>Hành động</th>
+            <th>Chi tiết</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in activity_logs %}
+          <tr>
+            <td>{{ log.created_at }}</td>
+            <td>{{ log.user_id or "—" }}</td>
+            <td>{{ log.action }}</td>
+            <td>{{ log.details or "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>Chưa có hoạt động.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2>Lịch sử nhận diện</h2>
+      {% if recognition %}
+      <table class="table small">
+        <thead>
+          <tr>
+            <th>Thời gian</th>
+            <th>Khách hàng</th>
+            <th>Nhân viên</th>
+            <th>Camera</th>
+            <th>Độ tin cậy</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in recognition %}
+          <tr>
+            <td>{{ item.recognized_at }}</td>
+            <td>{{ item.customer_name or "Unknown" }}</td>
+            <td>{{ item.staff_id or "—" }}</td>
+            <td>{{ item.camera_id or "—" }}</td>
+            <td>{{ "{:.2f}".format(item.confidence or 0) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>Chưa có sự kiện nhận diện.</p>
+      {% endif %}
+    </section>
+  </section>
+</div>
+{% endblock %}

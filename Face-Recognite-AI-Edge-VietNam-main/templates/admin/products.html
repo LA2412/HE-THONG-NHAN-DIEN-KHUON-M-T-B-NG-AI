@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <nav>
+      <a href="{{ url_for('admin_dashboard') }}">Tổng quan</a>
+      <a href="{{ url_for('admin_users') }}">Quản lý tài khoản</a>
+      <a href="{{ url_for('admin_products') }}" class="active">Quản lý sản phẩm</a>
+      <a href="{{ url_for('admin_faces') }}">Quản lý dữ liệu nhận diện</a>
+      <a href="{{ url_for('admin_reports') }}">Báo cáo & nhật ký</a>
+    </nav>
+  </aside>
+  <section class="content">
+    <h1>Quản lý sản phẩm</h1>
+    <section class="card">
+      <h2>Danh mục</h2>
+      <form method="post">
+        <input type="hidden" name="resource" value="category" />
+        <div class="form-grid">
+          <input name="name" placeholder="Tên danh mục" required />
+          <input name="description" placeholder="Mô tả" />
+        </div>
+        <button type="submit" class="btn btn-primary">Thêm danh mục</button>
+      </form>
+      {% if categories %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Tên</th>
+            <th>Mô tả</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for category in categories %}
+          <tr>
+            <td>{{ category.name }}</td>
+            <td>{{ category.description or "—" }}</td>
+            <td>
+              <form method="post" onsubmit="return confirm('Xóa danh mục này?');">
+                <input type="hidden" name="resource" value="category-delete" />
+                <input type="hidden" name="category_id" value="{{ category.id }}" />
+                <button class="btn btn-danger btn-small" type="submit">Xóa</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>Chưa có danh mục.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2>Thêm sản phẩm</h2>
+      <form method="post">
+        <input type="hidden" name="resource" value="product" />
+        <div class="form-grid">
+          <input name="sku" placeholder="SKU" required />
+          <input name="name" placeholder="Tên sản phẩm" required />
+          <input name="price" type="number" step="1000" min="0" placeholder="Giá bán" required />
+          <input name="stock" type="number" min="0" placeholder="Tồn kho" required />
+          <select name="category_id">
+            <option value="">-- Không phân loại --</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+          <input name="image_path" placeholder="Đường dẫn ảnh" />
+        </div>
+        <textarea name="description" placeholder="Mô tả sản phẩm" rows="3"></textarea>
+        <button type="submit" class="btn btn-primary">Thêm sản phẩm</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Danh sách sản phẩm</h2>
+      <form method="get" class="form-inline">
+        <input name="keyword" placeholder="Tìm kiếm theo tên hoặc SKU" value="{{ request.args.get('keyword', '') }}" />
+        <button type="submit" class="btn btn-secondary">Tìm kiếm</button>
+      </form>
+      {% if products %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Tên</th>
+            <th>Giá</th>
+            <th>Tồn kho</th>
+            <th>Danh mục</th>
+            <th>Trạng thái</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>{{ product.sku }}</td>
+            <td>{{ product.name }}</td>
+            <td>{{ "{:,.0f}".format(product.price or 0) }} đ</td>
+            <td>{{ product.stock }}</td>
+            <td>{{ product.category_name or "—" }}</td>
+            <td>{% if product.is_active %}<span class="badge badge-success">Đang bán</span>{% else %}<span class="badge badge-danger">Tạm dừng</span>{% endif %}</td>
+            <td>
+              <form method="post" class="stacked-form">
+                <input type="hidden" name="resource" value="product-update" />
+                <input type="hidden" name="product_id" value="{{ product.id }}" />
+                <div class="form-grid compact">
+                  <input name="name" value="{{ product.name }}" />
+                  <input name="price" type="number" step="1000" min="0" value="{{ product.price }}" />
+                  <input name="stock" type="number" min="0" value="{{ product.stock }}" />
+                  <select name="category_id">
+                    <option value="">-- Không phân loại --</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if product.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="is_active">
+                    <option value="1" {% if product.is_active %}selected{% endif %}>Đang bán</option>
+                    <option value="0" {% if not product.is_active %}selected{% endif %}>Tạm dừng</option>
+                  </select>
+                </div>
+                <textarea name="description" rows="2" placeholder="Mô tả">{{ product.description or "" }}</textarea>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-secondary">Lưu</button>
+                </div>
+              </form>
+              <form method="post" onsubmit="return confirm('Xóa sản phẩm này?');">
+                <input type="hidden" name="resource" value="product-delete" />
+                <input type="hidden" name="product_id" value="{{ product.id }}" />
+                <button type="submit" class="btn btn-danger btn-small">Xóa</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>Không tìm thấy sản phẩm phù hợp.</p>
+      {% endif %}
+    </section>
+  </section>
+</div>
+{% endblock %}

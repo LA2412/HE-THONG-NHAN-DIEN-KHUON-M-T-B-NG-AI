@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <nav>
+      <a href="{{ url_for('admin_dashboard') }}">Tổng quan</a>
+      <a href="{{ url_for('admin_users') }}" class="active">Quản lý tài khoản</a>
+      <a href="{{ url_for('admin_products') }}">Quản lý sản phẩm</a>
+      <a href="{{ url_for('admin_faces') }}">Quản lý dữ liệu nhận diện</a>
+      <a href="{{ url_for('admin_reports') }}">Báo cáo & nhật ký</a>
+    </nav>
+  </aside>
+  <section class="content">
+    <h1>Quản lý tài khoản</h1>
+
+    <section class="card">
+      <h2>Tạo tài khoản mới</h2>
+      <form method="post">
+        <input type="hidden" name="action" value="create" />
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="new-username">Tài khoản</label>
+            <input id="new-username" name="username" required />
+          </div>
+          <div class="form-group">
+            <label for="new-password">Mật khẩu</label>
+            <input id="new-password" name="password" type="password" required />
+          </div>
+          <div class="form-group">
+            <label for="new-full-name">Họ tên</label>
+            <input id="new-full-name" name="full_name" />
+          </div>
+          <div class="form-group">
+            <label for="new-email">Email</label>
+            <input id="new-email" name="email" type="email" />
+          </div>
+          <div class="form-group">
+            <label for="new-phone">Điện thoại</label>
+            <input id="new-phone" name="phone" />
+          </div>
+          <div class="form-group">
+            <label for="new-role">Vai trò</label>
+            <select id="new-role" name="role">
+              <option value="admin">Admin</option>
+              <option value="staff" selected>Nhân viên</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Danh sách tài khoản</h2>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Tài khoản</th>
+              <th>Vai trò</th>
+              <th>Họ tên</th>
+              <th>Email</th>
+              <th>Điện thoại</th>
+              <th>Trạng thái</th>
+              <th>Cập nhật</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>{{ user.username }}</td>
+              <td>{{ user.role }}</td>
+              <td>{{ user.full_name or "—" }}</td>
+              <td>{{ user.email or "—" }}</td>
+              <td>{{ user.phone or "—" }}</td>
+              <td>
+                {% if user.is_active %}<span class="badge badge-success">Đang hoạt động</span>{% else %}<span class="badge badge-danger">Đã khóa</span>{% endif %}
+              </td>
+              <td>
+                <form method="post" class="stacked-form">
+                  <input type="hidden" name="action" value="update" />
+                  <input type="hidden" name="user_id" value="{{ user.id }}" />
+                  <div class="form-grid compact">
+                    <input name="full_name" placeholder="Họ tên" value="{{ user.full_name or '' }}" />
+                    <input name="email" placeholder="Email" value="{{ user.email or '' }}" />
+                    <input name="phone" placeholder="Điện thoại" value="{{ user.phone or '' }}" />
+                    <select name="role">
+                      <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                      <option value="staff" {% if user.role == 'staff' %}selected{% endif %}>Nhân viên</option>
+                    </select>
+                    <select name="is_active">
+                      <option value="1" {% if user.is_active %}selected{% endif %}>Kích hoạt</option>
+                      <option value="0" {% if not user.is_active %}selected{% endif %}>Khóa</option>
+                    </select>
+                    <input name="new_password" type="password" placeholder="Đổi mật khẩu" />
+                  </div>
+                  <div class="form-actions">
+                    <button type="submit" class="btn btn-secondary">Lưu</button>
+                  </div>
+                </form>
+                <form method="post" onsubmit="return confirm('Xóa tài khoản này?');">
+                  <input type="hidden" name="action" value="delete" />
+                  <input type="hidden" name="user_id" value="{{ user.id }}" />
+                  <button type="submit" class="btn btn-danger btn-small">Xóa</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+</div>
+{% endblock %}

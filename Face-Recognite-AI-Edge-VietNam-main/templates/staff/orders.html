@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <nav>
+      <a href="{{ url_for('staff_dashboard') }}">Bán hàng</a>
+      <a href="{{ url_for('staff_customers') }}">Khách hàng</a>
+      <a href="{{ url_for('staff_orders') }}" class="active">Lịch sử đơn hàng</a>
+    </nav>
+  </aside>
+  <section class="content">
+    <h1>Đơn hàng của tôi</h1>
+    {% if orders %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Mã đơn</th>
+          <th>Khách hàng</th>
+          <th>Giá trị</th>
+          <th>Ngày tạo</th>
+          <th>Chi tiết</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td>{{ order.order_number }}</td>
+          <td>{{ order.customer_name or "—" }}</td>
+          <td>{{ "{:,.0f}".format(order.total_amount or 0) }} đ</td>
+          <td>{{ order.created_at }}</td>
+          <td>
+            <details>
+              <summary>Xem</summary>
+              <ul>
+                {% for item in order.items %}
+                <li>{{ item.name }} x{{ item.quantity }} = {{ "{:,.0f}".format(item.total_price) }} đ</li>
+                {% endfor %}
+              </ul>
+            </details>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>Chưa có đơn hàng.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

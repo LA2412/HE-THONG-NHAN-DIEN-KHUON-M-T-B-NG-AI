@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <nav>
+      <a href="{{ url_for('staff_dashboard') }}" class="active">Bán hàng</a>
+      <a href="{{ url_for('staff_customers') }}">Khách hàng</a>
+      <a href="{{ url_for('staff_orders') }}">Lịch sử đơn hàng</a>
+    </nav>
+  </aside>
+  <section class="content">
+    <h1>Quầy bán hàng thông minh</h1>
+
+    <div class="pos-layout">
+      <div class="identity-column">
+        <section class="card identity-card">
+          <div class="identity-header">
+            <h2>Nhận diện khách hàng</h2>
+            <p>Camera sẽ tự động quét và nhận diện khuôn mặt khách hàng theo thời gian thực.</p>
+          </div>
+          <div class="camera-controls">
+            <button type="button" id="start-recognition" class="btn btn-secondary">Bật camera</button>
+            <button type="button" id="stop-recognition" class="btn btn-secondary" disabled>Tắt camera</button>
+            <span id="recognition-status" class="status-text">Camera chưa bật.</span>
+          </div>
+          <div class="camera-feed">
+            <video id="camera-stream" autoplay playsinline muted></video>
+          </div>
+        </section>
+
+        <section class="card identity-info-card">
+          <h2>Thông tin khách hàng</h2>
+          <p id="recognition-alert" class="recognition-alert{% if active_customer_info %} show{% endif %}">
+            {% if active_customer_info %}
+            Đã nhận diện khách hàng {{ active_customer_info.full_name }} – Face ID {{ active_customer_info.face_id or "—" }}.
+            {% else %}
+            Chưa nhận diện khách hàng.
+            {% endif %}
+          </p>
+          <div class="customer-summary" id="active-customer-panel" data-has="{{ '1' if active_customer_info else '0' }}">
+            {% if active_customer_info %}
+            <dl class="customer-overview">
+              <div>
+                <dt>Họ tên</dt>
+                <dd id="active-customer-name">{{ active_customer_info.full_name }}</dd>
+              </div>
+              <div>
+                <dt>Face ID</dt>
+                <dd id="active-customer-face-id">{{ active_customer_info.face_id or "—" }}</dd>
+              </div>
+              <div>
+                <dt>Điện thoại</dt>
+                <dd id="active-customer-phone">{{ active_customer_info.phone or "—" }}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd id="active-customer-email">{{ active_customer_info.email or "—" }}</dd>
+              </div>
+            </dl>
+            {% else %}
+            <p id="active-customer-placeholder" class="muted">Chưa nhận diện khách hàng.</p>
+            {% endif %}
+          </div>
+          <div class="recognition-actions" id="recognition-actions" {% if not active_customer_info %}hidden{% endif %}>
+            <p class="question">Có sử dụng thông tin này không?</p>
+            <div class="action-buttons">
+              <button type="button" class="btn btn-primary btn-small" id="use-customer-btn" {% if active_customer_info %}data-customer-id="{{ active_customer_info.id }}"{% endif %}>Sử dụng thông tin</button>
+              <button type="button" class="btn btn-secondary btn-small" id="reset-recognition-btn">Làm mới nhận diện</button>
+            </div>
+          </div>
+          <div class="recognition-results">
+            <h3>Kết quả nhận diện gần đây</h3>
+            <ul id="recognition-matches"></ul>
+          </div>
+          <div class="history-section">
+            <h3>Lịch sử mua hàng</h3>
+            <div id="purchase-history" class="history-block">
+              {% if purchase_history %}
+              <table class="table small">
+                <thead>
+                  <tr>
+                    <th>Mã đơn</th>
+                    <th>Ngày</th>
+                    <th>Giá trị</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for order in purchase_history %}
+                  <tr>
+                    <td>{{ order.order_number }}</td>
+                    <td>{{ order.created_at }}</td>
+                    <td>{{ "{:,.0f}".format(order.total_amount or 0) }} đ</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+              {% else %}
+              <p class="muted">Chưa có lịch sử mua hàng.</p>
+              {% endif %}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="pos-right{% if not active_customer_info %} pos-right--locked{% endif %}" id="pos-workspace" data-locked="{{ '0' if active_customer_info else '1' }}">
+        <div class="pos-lock-overlay" id="pos-lock-overlay" {% if active_customer_info %}hidden{% endif %}>
+          <p>Chưa có khách hàng được xác nhận. Vui lòng hoàn tất nhận diện hoặc bán cho khách vãng lai.</p>
+          <form method="post" action="{{ url_for('staff_clear_customer') }}">
+            <button class="btn btn-secondary btn-small" type="submit">Bán cho khách vãng lai</button>
+          </form>
+        </div>
+
+        <section class="card customer-profile-card">
+          <h2>Thông tin khách hàng</h2>
+          <form id="customer-profile-form" class="customer-profile" autocomplete="off">
+            <input type="hidden" id="customer-profile-id" value="{{ active_customer_info.id if active_customer_info else '' }}" />
+            <div class="form-grid">
+              <label>
+                Họ tên
+                <input id="customer-profile-name" name="full_name" placeholder="Họ tên khách hàng" value="{{ active_customer_info.full_name if active_customer_info else '' }}" />
+              </label>
+              <label>
+                Số điện thoại
+                <input id="customer-profile-phone" name="phone" placeholder="Số điện thoại" value="{{ active_customer_info.phone if active_customer_info else '' }}" />
+              </label>
+              <label>
+                Email
+                <input id="customer-profile-email" name="email" type="email" placeholder="Email" value="{{ active_customer_info.email if active_customer_info else '' }}" />
+              </label>
+              <label>
+                Face ID
+                <input id="customer-profile-face-id" name="face_id" placeholder="Face ID" value="{{ active_customer_info.face_id if active_customer_info else '' }}" />
+              </label>
+            </div>
+          </form>
+          <div class="profile-actions">
+            <form method="post" action="{{ url_for('staff_clear_customer') }}">
+              <button class="btn btn-small btn-danger" type="submit">Làm mới & bán khách khác</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="card pos-workspace">
+          <div class="pos-tabs">
+            <button type="button" class="tab-btn active" data-tab="tab-search">Tìm kiếm</button>
+            <button type="button" class="tab-btn" data-tab="tab-catalog">Danh sách sản phẩm</button>
+            <button type="button" class="tab-btn" data-tab="tab-cart">Giỏ hàng</button>
+            <button type="button" class="tab-btn" data-tab="tab-register">Đăng ký khách</button>
+          </div>
+
+          <div class="tab-content active" id="tab-search">
+            <form method="get" action="{{ url_for('staff_dashboard') }}" class="form-inline">
+              <input name="keyword" placeholder="Tên hoặc SKU" value="{{ request.args.get('keyword', '') }}" />
+              <button type="submit" class="btn btn-secondary">Tìm kiếm</button>
+            </form>
+            {% if products %}
+            <div class="product-grid">
+              {% for product in products %}
+              <div class="product-card">
+                <div>
+                  <h3>{{ product.name }}</h3>
+                  <p class="sku">SKU: {{ product.sku }}</p>
+                </div>
+                <p class="price">{{ "{:,.0f}".format(product.price or 0) }} đ</p>
+                <p class="stock">Tồn kho: {{ product.stock }}</p>
+                <form method="post" action="{{ url_for('staff_add_to_cart') }}">
+                  <input type="hidden" name="product_id" value="{{ product.id }}" />
+                  <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" />
+                  <button type="submit" class="btn btn-small">Thêm vào giỏ</button>
+                </form>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="muted">Nhập từ khóa để tìm sản phẩm.</p>
+            {% endif %}
+          </div>
+
+          <div class="tab-content" id="tab-catalog">
+            {% if catalog_products %}
+            <table class="table small">
+              <thead>
+                <tr>
+                  <th>Sản phẩm</th>
+                  <th>SKU</th>
+                  <th>Giá</th>
+                  <th>Tồn kho</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for product in catalog_products %}
+                <tr>
+                  <td>{{ product.name }}</td>
+                  <td>{{ product.sku }}</td>
+                  <td>{{ "{:,.0f}".format(product.price or 0) }} đ</td>
+                  <td>{{ product.stock }}</td>
+                  <td>
+                    <form method="post" action="{{ url_for('staff_add_to_cart') }}">
+                      <input type="hidden" name="product_id" value="{{ product.id }}" />
+                      <input type="hidden" name="quantity" value="1" />
+                      <button type="submit" class="btn btn-small">Thêm</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <p class="muted">Chưa có sản phẩm nào trong kho.</p>
+            {% endif %}
+          </div>
+
+          <div class="tab-content" id="tab-cart">
+            {% if cart_items %}
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Sản phẩm</th>
+                  <th>Số lượng</th>
+                  <th>Đơn giá</th>
+                  <th>Thành tiền</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in cart_items %}
+                <tr>
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ "{:,.0f}".format(item.price) }} đ</td>
+                  <td>{{ "{:,.0f}".format(item.total) }} đ</td>
+                  <td>
+                    <form method="post" action="{{ url_for('staff_remove_from_cart') }}">
+                      <input type="hidden" name="product_id" value="{{ item.product_id }}" />
+                      <button type="submit" class="btn btn-danger btn-small">Xóa</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <div class="cart-summary">
+              <p>Tổng cộng: <strong>{{ "{:,.0f}".format(cart_total) }} đ</strong></p>
+              <form method="post" action="{{ url_for('staff_checkout') }}">
+                <select name="payment_method" required>
+                  <option value="">Chọn phương thức thanh toán</option>
+                  <option value="cash">Tiền mặt</option>
+                  <option value="card">Thẻ</option>
+                  <option value="transfer">Chuyển khoản</option>
+                  <option value="other">Khác</option>
+                </select>
+                <textarea name="notes" rows="2" placeholder="Ghi chú đơn hàng"></textarea>
+                <button type="submit" class="btn btn-primary">Tạo đơn hàng</button>
+              </form>
+              <form method="post" action="{{ url_for('staff_clear_cart') }}">
+                <button type="submit" class="btn btn-secondary btn-small">Xóa giỏ hàng</button>
+              </form>
+            </div>
+            {% else %}
+            <p class="muted">Giỏ hàng đang trống.</p>
+            {% endif %}
+          </div>
+
+          <div class="tab-content" id="tab-register">
+            <form method="post" action="{{ url_for('staff_register_customer') }}" enctype="multipart/form-data">
+              <div class="form-grid">
+                <input name="full_name" placeholder="Tên khách hàng" required />
+                <select name="gender">
+                  <option value="">Giới tính</option>
+                  <option>Nam</option>
+                  <option>Nữ</option>
+                  <option>Khác</option>
+                </select>
+                <input name="phone" placeholder="Số điện thoại" />
+                <input name="email" placeholder="Email" type="email" />
+              </div>
+              <textarea name="notes" placeholder="Ghi chú" rows="2"></textarea>
+              <p>Tải video 10 giây (định dạng mp4/webm) quay khuôn mặt khách hàng.</p>
+              <input type="file" name="video" accept="video/*" capture="environment" required />
+              <button type="submit" class="btn btn-primary">Đăng ký</button>
+            </form>
+            {% if registration %}
+            <p class="mt-2">{{ registration }}</p>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  window.initialActiveCustomer = {{ active_customer_info|tojson }};
+  window.initialPurchaseHistory = {{ purchase_history|tojson }};
+  window.resetRecognitionUrl = "{{ url_for('staff_reset_recognition') }}";
+</script>
+<script src="{{ url_for('static', filename='js/recognition.js') }}"></script>
+{% endblock %}

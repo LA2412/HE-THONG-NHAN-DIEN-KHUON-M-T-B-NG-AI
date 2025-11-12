@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <nav>
+      <a href="{{ url_for('admin_dashboard') }}" class="active">Tổng quan</a>
+      <a href="{{ url_for('admin_users') }}">Quản lý tài khoản</a>
+      <a href="{{ url_for('admin_products') }}">Quản lý sản phẩm</a>
+      <a href="{{ url_for('admin_faces') }}">Quản lý dữ liệu nhận diện</a>
+      <a href="{{ url_for('admin_reports') }}">Báo cáo & nhật ký</a>
+    </nav>
+  </aside>
+  <section class="content">
+    <h1>Tổng quan hoạt động</h1>
+    <div class="grid stats-grid">
+      <div class="card stat-card">
+        <h2>Doanh thu</h2>
+        <p class="stat-value">{{ "{:,.0f}".format(stats.revenue or 0) }} đ</p>
+      </div>
+      <div class="card stat-card">
+        <h2>Tổng đơn</h2>
+        <p class="stat-value">{{ stats.total_orders or 0 }}</p>
+      </div>
+      <div class="card stat-card">
+        <h2>Tỉ lệ nhận diện chính xác</h2>
+        <p class="stat-value">{{ "{:.1f}".format(metrics.accuracy * 100 if metrics.accuracy else 0) }} %</p>
+      </div>
+      <div class="card stat-card">
+        <h2>Khách hàng thân thiết</h2>
+        <p class="stat-value">{{ frequent_customers }}</p>
+      </div>
+    </div>
+
+    <section class="card">
+      <h2>Khách hàng tiêu biểu</h2>
+      {% if top_customers %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Tên</th>
+            <th>Tổng chi tiêu</th>
+            <th>Lượt ghé</th>
+            <th>Lần cuối</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for customer in top_customers %}
+          <tr>
+            <td>{{ customer.full_name or "Chưa có tên" }}</td>
+            <td>{{ "{:,.0f}".format(customer.total_spend or 0) }} đ</td>
+            <td>{{ customer.visit_count or 0 }}</td>
+            <td>{{ customer.last_visit or "—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>Chưa có dữ liệu khách hàng.</p>
+      {% endif %}
+    </section>
+
+    <section class="card">
+      <h2>Hiệu suất nhân viên</h2>
+      {% if employee_stats %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Nhân viên</th>
+            <th>Đơn xử lý</th>
+            <th>Doanh thu</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for staff in employee_stats %}
+          <tr>
+            <td>{{ staff.full_name or "—" }}</td>
+            <td>{{ staff.orders_handled or 0 }}</td>
+            <td>{{ "{:,.0f}".format(staff.revenue or 0) }} đ</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>Chưa có thống kê nhân viên.</p>
+      {% endif %}
+    </section>
+  </section>
+</div>
+{% endblock %}

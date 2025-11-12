@@ -1,0 +1,13 @@
+faiss-cpu
+tensorflow
+keras
+onnxruntime
+openvino
+opencv-python
+mtcnn
+ultralytics
+numpy
+Pillow
+av
+pymongo
+Flask

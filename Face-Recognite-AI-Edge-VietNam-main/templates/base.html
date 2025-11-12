@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title or "Face Retail AI" }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="logo">Face Retail AI</div>
+      {% if session.get('user') %}
+      <nav class="nav-actions">
+        <span>Xin chào, {{ session['user'].get('full_name') or session['user']['username'] }}</span>
+        <form action="{{ url_for('logout') }}" method="post" class="inline-form">
+          <button type="submit" class="btn btn-secondary">Đăng xuất</button>
+        </form>
+      </nav>
+      {% endif %}
+    </header>
+
+    <main class="app-main">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-container">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="app-footer">
+      <p>&copy; {{ current_year }} Face Retail AI - Powered by Flask</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

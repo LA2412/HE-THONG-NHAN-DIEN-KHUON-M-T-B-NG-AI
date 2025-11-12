@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="layout">
+  <aside class="sidebar">
+    <nav>
+      <a href="{{ url_for('staff_dashboard') }}">Bán hàng</a>
+      <a href="{{ url_for('staff_customers') }}" class="active">Khách hàng</a>
+      <a href="{{ url_for('staff_orders') }}">Lịch sử đơn hàng</a>
+    </nav>
+  </aside>
+  <section class="content">
+    <h1>Danh sách khách hàng</h1>
+    <form method="get" class="form-inline">
+      <input name="keyword" placeholder="Tên hoặc SĐT" value="{{ request.args.get('keyword', '') }}" />
+      <button type="submit" class="btn btn-secondary">Tìm kiếm</button>
+    </form>
+    {% if customers %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Tên</th>
+          <th>Điện thoại</th>
+          <th>Email</th>
+          <th>Face ID</th>
+          <th>Lượt ghé</th>
+          <th>Tổng chi tiêu</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for customer in customers %}
+        <tr>
+          <td>{{ customer.full_name or "—" }}</td>
+          <td>{{ customer.phone or "—" }}</td>
+          <td>{{ customer.email or "—" }}</td>
+          <td>{{ customer.face_id or "—" }}</td>
+          <td>{{ customer.visit_count or 0 }}</td>
+          <td>{{ "{:,.0f}".format(customer.total_spend or 0) }} đ</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>Không tìm thấy khách hàng.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
