@@ -4,7 +4,7 @@
     </a>
 </h2>
 <h2 align="center">
-   HỆ THỐNG NHẬN DIỆN KHUÔN MẶT AI CHO BÁN LẺ THÔNG MINH
+   HỆ THỐNG QUẢN LÝ THỦ VIỆN SỐ MGX
 </h2>
 
 <div align="center">
@@ -14,9 +14,6 @@
 [![DaiNam University](https://img.shields.io/badge/DaiNam%20University-orange?style=for-the-badge)](https://dainam.edu.vn)
 
 </div>
-
----
-
 ## � **1. Giới thiệu hệ thống**  
 
 **Hệ thống Nhận diện Khuôn mặt AI cho Bán lẻ Thông minh** là một giải pháp toàn diện được xây dựng bằng **Flask (Python)** kết hợp **Deep Learning** và **Computer Vision**, cung cấp đầy đủ các chức năng nhận diện khách hàng, quản lý bán hàng, CRM và báo cáo phân tích.
